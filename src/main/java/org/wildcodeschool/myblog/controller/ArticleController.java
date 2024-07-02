@@ -88,7 +88,7 @@ public class ArticleController {
     @GetMapping("/after")
     public ResponseEntity<List<Article>> getArticlesAfterDate(@RequestParam String date) {
         LocalDateTime localDateTime = LocalDateTime.parse(date);
-        List<Article> articles = articleRepository.findByAfterDate(localDateTime);
+        List<Article> articles = articleRepository.findByCreatedAtAfter(localDateTime);
         if (articles.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
@@ -97,7 +97,7 @@ public class ArticleController {
 
     @GetMapping("/last-five")
     public ResponseEntity<List<Article>> getLastFiveArticles() {
-        List<Article> articles = articleRepository.findByLastFive();
+        List<Article> articles = articleRepository.findTop5ByOrderByCreatedAtDesc();
         if (articles.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
