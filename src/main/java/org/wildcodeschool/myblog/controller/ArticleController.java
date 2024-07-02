@@ -5,7 +5,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.wildcodeschool.myblog.model.Article;
+import org.wildcodeschool.myblog.model.Category;
 import org.wildcodeschool.myblog.repository.ArticleRepository;
+import org.wildcodeschool.myblog.repository.CategoryRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -16,6 +18,9 @@ public class ArticleController {
 
     @Autowired
     private ArticleRepository articleRepository;
+
+    @Autowired
+    private CategoryRepository categoryRepository;
 
     @GetMapping
     public ResponseEntity<List<Article>> getAllArticles() {
@@ -39,6 +44,16 @@ public class ArticleController {
     public ResponseEntity<Article> createArticle(@RequestBody Article article) {
         article.setCreatedAt(LocalDateTime.now());
         article.setUpdatedAt(LocalDateTime.now());
+
+        // Ajout de la catégorie
+        if (article.getCategory() != null) {
+            Category category = categoryRepository.findById(article.getCategory().getId()).orElse(null);
+            if (category == null) {
+                return ResponseEntity.badRequest().body(null); // Retourne une réponse 400 Bad Request si la catégorie n'est pas trouvée
+            }
+            article.setCategory(category);
+        }
+
         Article savedArticle = articleRepository.save(article);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedArticle);
     }
@@ -52,6 +67,14 @@ public class ArticleController {
             article.setTitle(articleDetails.getTitle());
             article.setContent(articleDetails.getContent());
             article.setUpdatedAt(LocalDateTime.now());
+
+            if (articleDetails.getCategory() != null) {
+                Category category = categoryRepository.findById(articleDetails.getCategory().getId()).orElse(null);
+                if (category == null) {
+                    return ResponseEntity.badRequest().body(null); // Retourne une réponse 400 Bad Request si la catégorie n'est pas trouvée
+                }
+                article.setCategory(category);
+            }
             Article updatedArticle = articleRepository.save(article);
             return ResponseEntity.ok(updatedArticle);
         }
