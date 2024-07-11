@@ -10,14 +10,18 @@ import org.wildcodeschool.myblog.model.Category;
 import org.wildcodeschool.myblog.repository.CategoryRepository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/categories")
 public class CategoryController {
 
-    @Autowired
-    private CategoryRepository categoryRepository;
+    private final CategoryRepository categoryRepository;
+
+    public CategoryController(CategoryRepository categoryRepository) {
+        this.categoryRepository = categoryRepository;
+    }
 
     @GetMapping
     public ResponseEntity<List<CategoryDTO>> getAllCategories() {
@@ -31,10 +35,12 @@ public class CategoryController {
 
     @GetMapping("/{id}")
     public ResponseEntity<CategoryDTO> getCategoryById(@PathVariable Long id) {
-        Category category = categoryRepository.findById(id).orElse(null);
-        if (category == null) {
+        Optional<Category> optionalCategory = categoryRepository.findById(id);
+        if (!optionalCategory.isPresent()) {
             return ResponseEntity.notFound().build();
         }
+
+        Category category = optionalCategory.get();
         return ResponseEntity.ok(convertToDTO(category));
     }
 
@@ -47,10 +53,11 @@ public class CategoryController {
 
     @PutMapping("/{id}")
     public ResponseEntity<CategoryDTO> updateCategory(@PathVariable Long id, @RequestBody CategoryDTO categoryDTO) {
-        Category category = categoryRepository.findById(id).orElse(null);
-        if (category == null) {
+        Optional<Category> optionalCategory = categoryRepository.findById(id);
+        if (!optionalCategory.isPresent()) {
             return ResponseEntity.notFound().build();
         }
+        Category category = optionalCategory.get();
         category.setName(categoryDTO.getName());
         Category updatedCategory = categoryRepository.save(category);
         return ResponseEntity.ok(convertToDTO(updatedCategory));
@@ -58,10 +65,12 @@ public class CategoryController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCategory(@PathVariable Long id) {
-        Category category = categoryRepository.findById(id).orElse(null);
-        if (category == null) {
+        Optional<Category> optionalCategory = categoryRepository.findById(id);
+        if (!optionalCategory.isPresent()) {
             return ResponseEntity.notFound().build();
         }
+
+        Category category = optionalCategory.get();
         categoryRepository.delete(category);
         return ResponseEntity.noContent().build();
     }
@@ -70,36 +79,42 @@ public class CategoryController {
         CategoryDTO categoryDTO = new CategoryDTO();
         categoryDTO.setId(category.getId());
         categoryDTO.setName(category.getName());
-        categoryDTO.setArticles(category.getArticles().stream().map(article -> {
-            ArticleDTO articleDTO = new ArticleDTO();
-            articleDTO.setId(article.getId());
-            articleDTO.setTitle(article.getTitle());
-            articleDTO.setContent(article.getContent());
-            articleDTO.setCreatedAt(article.getCreatedAt());
-            articleDTO.setUpdatedAt(article.getUpdatedAt());
-            articleDTO.setCategoryId(article.getCategory().getId());
-            return articleDTO;
-        }).collect(Collectors.toList()));
-        return categoryDTO;
+        if (category.getArticles() != null) {
+            categoryDTO.setArticles(category.getArticles().stream().map(article -> {
+                ArticleDTO articleDTO = new ArticleDTO();
+                articleDTO.setId(article.getId());
+                articleDTO.setTitle(article.getTitle());
+                articleDTO.setContent(article.getContent());
+                articleDTO.setCreatedAt(article.getCreatedAt());
+                articleDTO.setUpdatedAt(article.getUpdatedAt());
+                if (article.getCategory() != null) {
+                    articleDTO.setCategoryId(article.getCategory().getId());
+                }
+                return articleDTO;
+            }).collect(Collectors.toList()));
+        }
+            return categoryDTO;
     }
 
     private Category convertToEntity(CategoryDTO categoryDTO) {
         Category category = new Category();
         category.setId(categoryDTO.getId());
         category.setName(categoryDTO.getName());
-        category.setArticles(categoryDTO.getArticles().stream().map(articleDTO -> {
-            Article article = new Article();
-            article.setId(articleDTO.getId());
-            article.setTitle(articleDTO.getTitle());
-            article.setContent(articleDTO.getContent());
-            article.setCreatedAt(articleDTO.getCreatedAt());
-            article.setUpdatedAt(articleDTO.getUpdatedAt());
-            if (articleDTO.getCategoryId() != null) {
-                Category categoryRef = categoryRepository.findById(articleDTO.getCategoryId()).orElse(null);
-                article.setCategory(categoryRef);
-            }
-            return article;
-        }).collect(Collectors.toList()));
+        if (categoryDTO.getArticles() != null) {
+            category.setArticles(categoryDTO.getArticles().stream().map(articleDTO -> {
+                Article article = new Article();
+                article.setId(articleDTO.getId());
+                article.setTitle(articleDTO.getTitle());
+                article.setContent(articleDTO.getContent());
+                article.setCreatedAt(articleDTO.getCreatedAt());
+                article.setUpdatedAt(articleDTO.getUpdatedAt());
+                if (articleDTO.getCategoryId() != null) {
+                    Category categoryRef = categoryRepository.findById(articleDTO.getCategoryId()).orElse(null);
+                    article.setCategory(categoryRef);
+                }
+                return article;
+            }).collect(Collectors.toList()));
+        }
         return category;
     }
 }

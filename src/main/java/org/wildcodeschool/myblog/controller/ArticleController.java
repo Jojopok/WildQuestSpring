@@ -9,9 +9,12 @@ import org.wildcodeschool.myblog.model.Article;
 import org.wildcodeschool.myblog.model.Category;
 import org.wildcodeschool.myblog.repository.ArticleRepository;
 import org.wildcodeschool.myblog.repository.CategoryRepository;
+import org.wildcodeschool.myblog.model.Tag;
+import org.wildcodeschool.myblog.repository.TagRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -25,8 +28,11 @@ public class ArticleController {
         articleDTO.setContent(article.getContent());
         articleDTO.setCreatedAt(article.getCreatedAt());
         articleDTO.setUpdatedAt(article.getUpdatedAt());
-        if (article.getCategory() != null) {
+        if (article.getCategory() != null && article.getCategory().getId() != null) {
             articleDTO.setCategoryId(article.getCategory().getId());
+        }
+        if (article.getTags() != null) {
+            articleDTO.setTagIds(article.getTags().stream().map(Tag::getId).collect(Collectors.toList()));
         }
         return articleDTO;
     }
@@ -39,12 +45,21 @@ public class ArticleController {
         article.setCreatedAt(articleDTO.getCreatedAt());
         article.setUpdatedAt(articleDTO.getUpdatedAt());
         if (articleDTO.getCategoryId() != null) {
-            Category category = categoryRepository.findById(articleDTO.getCategoryId()).orElse(null);
-            article.setCategory(category);
+            Optional<Category> optionalCategory = categoryRepository.findById(articleDTO.getCategoryId());
+            if(optionalCategory.isPresent()) {
+                Category category = optionalCategory.get();
+                article.setCategory(category);
+            }
+        }
+        if (articleDTO.getTagIds() != null) {
+            List<Tag> tags = tagRepository.findAllById(articleDTO.getTagIds());
+            article.setTags(tags);
         }
         return article;
     }
 
+    @Autowired
+    private TagRepository tagRepository;
 
     @Autowired
     private ArticleRepository articleRepository;
@@ -64,10 +79,11 @@ public class ArticleController {
 
     @GetMapping("/{id}")
     public ResponseEntity<ArticleDTO> getArticleById(@PathVariable Long id) {
-        Article article = articleRepository.findById(id).orElse(null);
-        if (article == null) {
+        Optional<Article> optionalArticle = articleRepository.findById(id);
+        if (!optionalArticle.isPresent()) {
             return ResponseEntity.notFound().build();
         }
+        Article article = optionalArticle.get();
         return ResponseEntity.ok(convertToDTO(article));
     }
 
@@ -82,20 +98,22 @@ public class ArticleController {
 
     @PutMapping("/{id}")
     public ResponseEntity<ArticleDTO> updateArticle(@PathVariable Long id, @RequestBody ArticleDTO articleDTO) {
-        Article article = articleRepository.findById(id).orElse(null);
-        if (article == null) {
+        Optional<Article> optionalArticle = articleRepository.findById(id);
+        if (!optionalArticle.isPresent()) {
             return ResponseEntity.notFound().build();
         }
+        Article article = optionalArticle.get();
         article.setTitle(articleDTO.getTitle());
         article.setContent(articleDTO.getContent());
         article.setUpdatedAt(LocalDateTime.now());
 
         // Mise à jour de la catégorie
         if (articleDTO.getCategoryId() != null) {
-            Category category = categoryRepository.findById(articleDTO.getCategoryId()).orElse(null);
-            if (category == null) {
-                return ResponseEntity.badRequest().body(null); // Retourne une réponse 400 Bad Request si la catégorie n'est pas trouvée
+            Optional<Category> optionalCategory = categoryRepository.findById(articleDTO.getCategoryId());
+            if (!optionalCategory.isPresent()) {
+                return ResponseEntity.badRequest().build();
             }
+            Category category = optionalCategory.get();
             article.setCategory(category);
         }
 
