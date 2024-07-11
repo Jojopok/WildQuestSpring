@@ -15,6 +15,8 @@ public class ArticleDTO {
         return tagIds;
     }
 
+    private List<ArticleAuthorDTO> authors;
+
     public void setTagIds(List<Long> tagIds) {
         this.tagIds = tagIds;
     }

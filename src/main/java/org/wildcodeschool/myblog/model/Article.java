@@ -20,13 +20,8 @@ public class Article {
     @JoinColumn(name = "category_id")
     private Category category;
 
-    public List<Tag> getTags() {
-        return tags;
-    }
-
-    public void setTags(List<Tag> tags) {
-        this.tags = tags;
-    }
+    @OneToMany(mappedBy = "article")
+    private List<ArticleAuthor> articleAuthors;
 
     @ManyToMany
     @JoinTable(
@@ -35,6 +30,22 @@ public class Article {
             inverseJoinColumns = @JoinColumn(name = "tag_id")
     )
     private List<Tag> tags;
+
+    public List<ArticleAuthor> getArticleAuthors() {
+        return articleAuthors;
+    }
+
+    public void setArticleAuthors(List<ArticleAuthor> articleAuthors) {
+        this.articleAuthors = articleAuthors;
+    }
+
+    public List<Tag> getTags() {
+        return tags;
+    }
+
+    public void setTags(List<Tag> tags) {
+        this.tags = tags;
+    }
 
     public Long getId() {
         return id;
