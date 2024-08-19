@@ -2,9 +2,9 @@ package org.wildcodeschool.myblog.dto;
 
 import java.util.List;
 
-public class TagDTO {
+public class ImageDTO {
     private Long id;
-    private String name;
+    private String url;
     private List<Long> articleIds;
 
     // Getters et setters
@@ -17,12 +17,12 @@ public class TagDTO {
         this.id = id;
     }
 
-    public String getName() {
-        return name;
+    public String getUrl() {
+        return url;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setUrl(String url) {
+        this.url = url;
     }
 
     public List<Long> getArticleIds() {

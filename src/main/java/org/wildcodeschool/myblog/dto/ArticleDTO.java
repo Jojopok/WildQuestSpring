@@ -10,6 +10,7 @@ public class ArticleDTO {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Long categoryId;
+    private List<String> imageUrls;
 
     public List<Long> getTagIds() {
         return tagIds;

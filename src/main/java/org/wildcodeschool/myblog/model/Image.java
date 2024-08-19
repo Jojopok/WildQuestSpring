@@ -1,18 +1,18 @@
 package org.wildcodeschool.myblog.model;
-
+import java.util.List;
 import jakarta.persistence.*;
 
-import java.util.List;
-
 @Entity
-public class Tag {
+public class Image {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String name;
 
-    @ManyToMany(mappedBy = "tags")
+    @Column(nullable = false)
+    private String url;
+
+    @ManyToMany(mappedBy = "images")
     private List<Article> articles;
 
     public Long getId() {
@@ -23,12 +23,12 @@ public class Tag {
         this.id = id;
     }
 
-    public String getName() {
-        return name;
+    public String getUrl() {
+        return url;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setUrl(String url) {
+        this.url = url;
     }
 
     public List<Article> getArticles() {
